@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+version = mod_version
+group = mod_group_id
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = "https://maven.createmod.net" }           // Create, Ponder, Flywheel
+    maven { url = "https://maven.ithundxr.dev/snapshots" }  // Registrate
+    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven" } // ForgeConfigAPIPort
+    maven { url = "https://api.modrinth.com/maven" }        // Modrinth
+}
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id,
+                '--all',
+                '--output', file('src/generated/resources/').absolutePath,
+                '--existing', file('src/main/resources/').absolutePath
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    // Create mod (compileOnly — players provide it at runtime)
+    compileOnly("com.simibubi.create:create-${minecraft_version}:${create_version}")
+
+    // Create at runtime for dev environment
+    localRuntime("com.simibubi.create:create-${minecraft_version}:${create_version}")
+
+    // Testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
