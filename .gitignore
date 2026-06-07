@@ -29,6 +29,9 @@ Thumbs.db
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
 
+# OMC
+.omc/
+
 # Local config
 local.properties
 *.env
